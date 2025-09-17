@@ -12,7 +12,6 @@ import { CategoryCustomAttribute } from "../product-custom-attributes/types";
 const CategoryCustomAttributesWidget = ({
   data: product_category,
 }: DetailWidgetProps<AdminProduct>) => {
-  console.log(product_category, "product_category");
 
   const { data, isLoading } = useQuery<{
     category_custom_attributes: CategoryCustomAttribute[];
@@ -50,7 +49,6 @@ const CategoryCustomAttributesWidget = ({
       label: value,
     };
 
-    console.log(updatePayload, "updatePayload");
     try {
       // Call the API to update the custom attribute
       const updatedAttribute = await sdk.client.fetch(
@@ -63,8 +61,6 @@ const CategoryCustomAttributesWidget = ({
           },
         }
       );
-
-      console.log(updatedAttribute, "updatedAttribute");
 
       setCategoryAttributes((prev) =>
         prev.map((attr) =>
@@ -134,8 +130,6 @@ const CategoryCustomAttributesWidget = ({
       setIsSubmitting(false);
     }
   };
-
-  console.log(categoryAttributes, "categoryAttributes");
 
   return (
     <>

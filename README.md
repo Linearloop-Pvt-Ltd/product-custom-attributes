@@ -61,9 +61,8 @@ Before using this plugin, ensure you have the following:
 This plugin enables you to manage custom attributes at both the product and category levels in your Medusa store. It allows you to define, update, and assign custom attribute values to products and categories, making it easier to extend your catalog with additional metadata or custom fields as needed for your business logic.
 
 **Key Features:**
-- Add and manage custom attributes for products.
 - Add and manage custom attributes for categories.
-- Set and update custom attribute values for each product and category.
+- Sync and set the values for each custom attributes synced to product of category.
 - Flexible structure to support a wide range of use cases, such as product specifications, category-specific filters, or additional descriptive fields.
 
 This plugin is ideal for stores that require more than the default product and category fields provided by Medusa, giving you the flexibility to tailor your catalog to your unique requirements.

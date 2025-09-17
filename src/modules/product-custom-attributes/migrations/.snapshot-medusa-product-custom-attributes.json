@@ -132,6 +132,16 @@
           "nullable": false,
           "mappedType": "text"
         },
+        "is_visible": {
+          "name": "is_visible",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "true",
+          "mappedType": "boolean"
+        },
         "category_custom_attribute_id": {
           "name": "category_custom_attribute_id",
           "type": "text",

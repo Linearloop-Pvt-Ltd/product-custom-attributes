@@ -23,7 +23,6 @@ export const EditCustomAttributes = (props: EditCustomAttributesInterface) => {
     product_id,
   } = props;
 
-  console.log(currentAttributes, "currentAttributes");
 
   const [attributes, setAttributes] = useState<ProductCustomAttribute[]>(
     currentAttributes || []
@@ -38,7 +37,6 @@ export const EditCustomAttributes = (props: EditCustomAttributesInterface) => {
         acc[attr.id] = attr.value;
         return acc;
       }, {});
-    console.log(defaultValues, "defaultValues");
     reset(defaultValues); // sets the form with default values
   }, [currentAttributes]);
 
@@ -66,7 +64,6 @@ export const EditCustomAttributes = (props: EditCustomAttributesInterface) => {
     alert("Custom attributes updated successfully");
   };
 
-  console.log(attributes, "attributes");
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>

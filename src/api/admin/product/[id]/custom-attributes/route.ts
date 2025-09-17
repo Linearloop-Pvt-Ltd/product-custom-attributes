@@ -52,7 +52,6 @@ export async function PATCH(
   res: MedusaResponse
 ) {
   try {
-    console.log("PATCH request received with body:", req.body);
     
     // Ensure we have a valid request body
     if (!req.body || !req.body.product_custom_attributes || !Array.isArray(req.body.product_custom_attributes)) {

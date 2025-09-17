@@ -33,6 +33,7 @@ export interface ProductCustomAttribute {
   id: string;
   product_id: string;
   value: string;
+  is_visible?: boolean;
   category_custom_attribute_id: string;
   category_custom_attribute: {
     id: string;

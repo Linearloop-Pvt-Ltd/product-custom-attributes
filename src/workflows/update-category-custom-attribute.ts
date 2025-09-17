@@ -8,7 +8,6 @@ import { UpdateCategoryCustomAttributeInput } from "../modules/product-custom-at
 export const updateCategoryCustomAttributeWorkflow = createWorkflow(
   "update-category-custom-attribute",
   (postInput: UpdateCategoryCustomAttributeInput) => {
-    console.log(postInput, "postInput");
     const categoryCustomAttribute = updateCategoryCustomAttributeStep(postInput);
 
     return new WorkflowResponse(categoryCustomAttribute);

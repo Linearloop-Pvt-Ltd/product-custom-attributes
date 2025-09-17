@@ -19,7 +19,7 @@ interface ProductCustomAttribute {
 interface AttributeResult {
   id: string;
   category_custom_attribute_id: string;
-  category_custom_attribute: {
+  category_custom_attribute: {  
     key: string;
     label: string;
   };
@@ -100,8 +100,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       try {
         const productCustomAttributeService: ProductCustomAttributeModuleService =
           req.scope.resolve(PRODUCT_CUSTOM_ATTRIBUTES_MODULE);
-        console.log("Service resolved successfully:", !!productCustomAttributeService);
-        console.log("Service methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(productCustomAttributeService)));
       } catch (serviceError) {
         console.error("Failed to resolve service:", serviceError);
         return res.status(500).json({
@@ -128,7 +126,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           });
         } else {
           try {
-            console.log(`Creating attribute for product ${productId} with category_custom_attribute_id ${catAttr.id}`);
             
             // Use the existing workflow to create the product custom attribute
             const { result: productCustomAttribute } = await createProductCustomAttributeWorkflow(req.scope).run({
@@ -139,7 +136,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
               },
             });
 
-            console.log("Workflow succeeded, created attribute:", productCustomAttribute);
 
             // Add to created array
             attributesCreated.push({

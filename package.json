@@ -1,6 +1,6 @@
 {
   "name": "@linearcommerce/product-custom-attributes",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Product custom attributes plugin for MedusaJS.",
   "author": "LinearCommerce (https://linearloop.io)",
   "license": "MIT",
@@ -26,10 +26,10 @@
   "keywords": [
     "medusa",
     "plugin",
-    "medusa-plugin-other",
     "medusa-plugin",
     "medusa-v2",
-    "medusa-product-custom-attributes"
+    "medusa-plugin-integration",
+    "medusa-plugin-other"
   ],
   "scripts": {
     "build": "medusa plugin:build",
@@ -81,8 +81,5 @@
   },
   "engines": {
     "node": ">=20"
-  },
-  "dependencies": {
-    "@linearcommerce/product-custom-attributes": "file:.yalc/@linearcommerce/product-custom-attributes"
   }  
 }
