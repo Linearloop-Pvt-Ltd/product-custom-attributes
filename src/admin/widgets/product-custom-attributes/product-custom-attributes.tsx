@@ -1,6 +1,6 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk";
 import { AdminProduct, DetailWidgetProps } from "@medusajs/framework/types";
-import { Pencil, Trash } from "@medusajs/icons";
+import { Pencil, Spinner, Trash } from "@medusajs/icons";
 import { Container, Heading, Text, Button, Textarea, Switch } from "@medusajs/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -219,9 +219,16 @@ const ProductCustomAttributesWidget = ({
   };
 
   const handleDelete = async (id: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this custom attribute? This action cannot be undone."
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
     try {
       const url = `/admin/product/${product.id}/custom-attributes?id=${id}`;
-      
       await sdk.client.fetch(
         url,
         {
@@ -242,7 +249,6 @@ const ProductCustomAttributesWidget = ({
         queryKey: [["product", product.id, "custom-attributes"]],
       });
     } catch (error: any) {
-      console.error("Failed to delete attribute", error);
       alert(`Error deleting attribute: ${error?.message || "Unknown error"}`);
     }
   };
@@ -301,7 +307,7 @@ const ProductCustomAttributesWidget = ({
               onClick={handleSync}
               disabled={isSyncing}
             >
-              {isSyncing ? "Syncing..." : "Sync Custom Attributes"}
+              {isSyncing ? <Spinner className="animate-spin" /> : "Sync Custom Attributes"}
             </Button>
           </div>
         </div>
@@ -316,7 +322,9 @@ const ProductCustomAttributesWidget = ({
         
         <div className="px-6 py-4">
           {isLoading ? (
-            "Loading..."
+            <div className="flex items-center justify-center h-full">
+              <Spinner className="animate-spin" />
+            </div>
           ) : productAttributes?.filter(attr => !attr.deleted_at).length ? (
             <div className="grid grid-cols-4 gap-x-4 gap-y-8">
               {/* Data Rows */}

@@ -49,12 +49,7 @@ Visit the [Docs](https://docs.medusajs.com/learn/installation#get-started) to le
 Before using this plugin, ensure you have the following:
 
 - **Medusa Version:** This plugin requires Medusa v2.x. Please make sure your project is using version 2 or above of `@medusajs/medusa`.
-- **Environment Variables:** Create a `.env` file in your project root (if you don't already have one) and add the following variables for your database connection:
-  ```env
-  DB_USERNAME=your_database_username
-  DB_PASSWORD=your_database_password
-  ```
-  Replace `your_database_username` and `your_database_password` with your actual database credentials.
+
 
 ## About This Plugin
 

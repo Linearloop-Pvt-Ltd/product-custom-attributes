@@ -4,7 +4,7 @@ import { Container, Heading, Input, Text } from "@medusajs/ui";
 import { useQuery } from "@tanstack/react-query";
 import { SectionRow } from "../../components/section-row";
 import { sdk } from "../../lib/sdk";
-import { Pencil, Trash } from "@medusajs/icons";
+import { Pencil, Spinner, Trash } from "@medusajs/icons";
 import { useState, useEffect } from "react";
 import { CategoryCustomAttribute } from "../product-custom-attributes/types";
 // Adjust this type based on your plugin's response structure
@@ -44,18 +44,17 @@ const CategoryCustomAttributesWidget = ({
   }, [data?.category_custom_attributes]);
 
   const handleSave = async (id: string, value: string) => {
-    const updatePayload = {
-      id: id,
-      label: value,
-    };
-
+   
     try {
       // Call the API to update the custom attribute
-      const updatedAttribute = await sdk.client.fetch(
+      await sdk.client.fetch(
         `/admin/category/${product_category.id}/custom-attributes`,
         {
           method: "PATCH",
-          body: updatePayload,
+          body:  {
+            id: id,
+            label: value,
+          },
           headers: {
             "Content-Type": "application/json",
           },
@@ -73,6 +72,15 @@ const CategoryCustomAttributesWidget = ({
   };
 
   const handleDelete = async (id: string) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this custom attribute? This action cannot be undone."
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
     try {
       const deletePayload = {
         id: id,
@@ -151,15 +159,17 @@ const CategoryCustomAttributesWidget = ({
           </div>
           <button
             type="submit"
-            className="bg-ui-bg-base border rounded px-3 py-1 text-sm"
+            className="bg-ui-bg-base border rounded px-3 py-1 text-sm h-8 w-auto"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Adding...' : 'Add Attribute'}
+            {isSubmitting ? <Spinner className="animate-spin" /> : 'Add'}
           </button>
         </form>
         <div className="px-6 py-4">
           {isLoading ? (
-            "Loading..."
+            <div className="flex items-center justify-center h-full">
+              <Spinner className="animate-spin" />
+            </div>
           ) : categoryAttributes?.filter(attr => !attr.deleted_at).length ? (
             <ul>
               {categoryAttributes.filter(attr => !attr.deleted_at).map(
@@ -188,7 +198,7 @@ const CategoryCustomAttributesWidget = ({
                     }
                     actions={
                       attr?.is_edit ? (
-                        <button onClick={() => handleSave(attr.id, attr.label)}>
+                        <button onClick={() => handleSave(attr.id, attr.label)} className="bg-ui-bg-base border rounded px-3 py-1 text-sm">
                           Save
                         </button>
                       ) : (
