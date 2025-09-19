@@ -1,12 +1,12 @@
 {
   "name": "@linearcommerce/product-custom-attributes",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Product custom attributes plugin for MedusaJS.",
-  "author": "LinearCommerce (https://linearloop.io)",
+  "author": "LinearCommerce (https://www.linearcommerce.io/)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BetterBugs-Team/web-sdk"
+    "url": "https://github.com/Linearloop-Pvt-Ltd/product-custom-attributes"
   },
   "files": [
     ".medusa/server"
@@ -37,12 +37,12 @@
     "prepublishOnly": "medusa plugin:build"
   },
   "devDependencies": {
-    "@medusajs/admin-sdk": "2.10.2",
-    "@medusajs/cli": "^2.10.2",
-    "@medusajs/framework": "2.10.2",
-    "@medusajs/icons": "2.10.2",
-    "@medusajs/medusa": "2.10.2",
-    "@medusajs/test-utils": "2.10.2",
+    "@medusajs/admin-sdk": "^2.8.2",
+    "@medusajs/cli": "^2.8.2",
+    "@medusajs/framework": "^2.8.2",
+    "@medusajs/icons": "^2.8.2",
+    "@medusajs/medusa": "^2.8.2",
+    "@medusajs/test-utils": "^2.8.2",
     "@medusajs/ui": "^4.0.4",
     "@mikro-orm/cli": "6.4.3",
     "@mikro-orm/core": "6.4.3",
@@ -64,12 +64,12 @@
     "yalc": "^1.0.0-pre.53"
   },
   "peerDependencies": {
-    "@medusajs/admin-sdk": "2.10.2",
-    "@medusajs/cli": "2.10.2",
-    "@medusajs/framework": "2.10.2",
-    "@medusajs/icons": "2.10.2",
-    "@medusajs/medusa": "2.10.2",
-    "@medusajs/test-utils": "2.10.2",
+    "@medusajs/admin-sdk": "^2.8.2",
+    "@medusajs/cli": "^2.8.2",
+    "@medusajs/framework": "^2.8.2",
+    "@medusajs/icons": "^2.8.2",
+    "@medusajs/medusa": "^2.8.2",
+    "@medusajs/test-utils": "^2.8.2",
     "@medusajs/ui": "^4.0.4",
     "@mikro-orm/cli": "6.4.3",
     "@mikro-orm/core": "6.4.3",
@@ -81,5 +81,5 @@
   },
   "engines": {
     "node": ">=20"
-  }  
+  }
 }

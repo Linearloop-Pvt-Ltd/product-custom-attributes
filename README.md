@@ -1,82 +1,65 @@
-<p align="center">
-  <a href="https://www.medusajs.com">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/59018053/229103275-b5e482bb-4601-46e6-8142-244f531cebdb.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    <img alt="Medusa logo" src="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    </picture>
-  </a>
-</p>
-<h1 align="center">
-  Medusa Plugin Starter
-</h1>
+<h1 align="center">Product Custom Attributes</h1>
 
-<h4 align="center">
-  <a href="https://docs.medusajs.com">Documentation</a> |
-  <a href="https://www.medusajs.com">Website</a>
-</h4>
+<p>This plugin provides the ability to manage custom attributes at the <strong>category level</strong>, with the option to <strong>sync those attributes to products</strong> within the category. You can then assign and manage values for each attribute at the product level. Additionally, the plugin allows you to configure the <strong>visibility of attributes on the storefront</strong>, ensuring that only the relevant information is displayed to customers.
+</strong></p>
 
-<p align="center">
-  Building blocks for digital commerce
-</p>
-<p align="center">
-  <a href="https://github.com/medusajs/medusa/blob/master/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs welcome!" />
-  </a>
-    <a href="https://www.producthunt.com/posts/medusa"><img src="https://img.shields.io/badge/Product%20Hunt-%231%20Product%20of%20the%20Day-%23DA552E" alt="Product Hunt"></a>
-  <a href="https://discord.gg/xpCwq3Kfn8">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
-  </a>
-  <a href="https://twitter.com/intent/follow?screen_name=medusajs">
-    <img src="https://img.shields.io/twitter/follow/medusajs.svg?label=Follow%20@medusajs" alt="Follow @medusajs" />
-  </a>
-</p>
+<br />
+
+## Previews
+<div style="display:flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory;">
+  <img src="./public/category-attributes.png" width="300" style="scroll-snap-align: start;" />
+  <img src="./public/product-attributes.png" width="300" style="scroll-snap-align: start;" />
+</div>
+
+
+## Installation
+
+```
+yarn add @linearcommerce/product-custom-attributes
+
+-- OR -- 
+
+npm i @linearcommerce/product-custom-attributes
+```
 
 ## Compatibility
 
-This starter is compatible with versions >= 2.4.0 of `@medusajs/medusa`. 
+**To use this plugin, you need to have the minimum versions of the following dependencies:**
 
-## Getting Started
+```json
+"@medusajs/admin-sdk": "^2.8.2",
+"@medusajs/cli": "^2.8.2",
+"@medusajs/framework": "^2.8.2",
+"@medusajs/icons": "^2.8.2",
+"@medusajs/js-sdk": "^2.8.2",
+"@medusajs/medusa": "^2.8.2",
+```
 
-Visit the [Quickstart Guide](https://docs.medusajs.com/learn/installation) to set up a server.
+## Usage
 
-Visit the [Plugins documentation](https://docs.medusajs.com/learn/fundamentals/plugins) to learn more about plugins and how to create them.
+#### Add the plugin to your `medusa-config.ts` file:
 
-Visit the [Docs](https://docs.medusajs.com/learn/installation#get-started) to learn more about our system requirements.
+```ts
+plugins: [
+  {
+    resolve: '@linearcommerce/product-custom-attributes',
+    options: {},
+  },
+],
+```
 
-## Prerequisites
+#### Run the database migrations (Adds a table to your database for storing custom attributes):
 
-Before using this plugin, ensure you have the following:
+```
+npx medusa db:migrate
+```
 
-- **Medusa Version:** This plugin requires Medusa v2.x. Please make sure your project is using version 2 or above of `@medusajs/medusa`.
 
+## Key Features:
 
-## About This Plugin
+- Define and manage custom attributes at the category level.  
+- Automatically sync category attributes to associated products and manage their values seamlessly.  
+- Leverage a flexible structure that supports diverse use cases, including product specifications, category-specific filters, and additional descriptive fields.  
 
-This plugin enables you to manage custom attributes at both the product and category levels in your Medusa store. It allows you to define, update, and assign custom attribute values to products and categories, making it easier to extend your catalog with additional metadata or custom fields as needed for your business logic.
+This plugin is particularly valuable for stores that need functionality beyond Medusa’s default product and category fields. It empowers you to extend and customize your catalog, ensuring it aligns with your unique business requirements.
 
-**Key Features:**
-- Add and manage custom attributes for categories.
-- Sync and set the values for each custom attributes synced to product of category.
-- Flexible structure to support a wide range of use cases, such as product specifications, category-specific filters, or additional descriptive fields.
-
-This plugin is ideal for stores that require more than the default product and category fields provided by Medusa, giving you the flexibility to tailor your catalog to your unique requirements.
-
-## What is Medusa
-
-Medusa is a set of commerce modules and tools that allow you to build rich, reliable, and performant commerce applications without reinventing core commerce logic. The modules can be customized and used to build advanced ecommerce stores, marketplaces, or any product that needs foundational commerce primitives. All modules are open-source and freely available on npm.
-
-Learn more about [Medusa's architecture](https://docs.medusajs.com/learn/introduction/architecture) and [commerce modules](https://docs.medusajs.com/learn/fundamentals/modules/commerce-modules) in the Docs.
-
-## Community & Contributions
-
-The community and core team are available in [GitHub Discussions](https://github.com/medusajs/medusa/discussions), where you can ask for support, discuss roadmap, and share ideas.
-
-Join our [Discord server](https://discord.com/invite/medusajs) to meet other community members.
-
-## Other channels
-
-- [GitHub Issues](https://github.com/medusajs/medusa/issues)
-- [Twitter](https://twitter.com/medusajs)
-- [LinkedIn](https://www.linkedin.com/company/medusajs)
-- [Medusa Blog](https://medusajs.com/blog/)
