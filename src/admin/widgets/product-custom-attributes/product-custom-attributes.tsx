@@ -1,17 +1,31 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk";
 import { AdminProduct, DetailWidgetProps } from "@medusajs/framework/types";
 import { Pencil, Spinner, Trash } from "@medusajs/icons";
-import { Container, Heading, Text, Button, Textarea, Switch } from "@medusajs/ui";
+import {
+  Container,
+  Heading,
+  Text,
+  Button,
+  Textarea,
+  Switch,
+  Drawer,
+  Label,
+} from "@medusajs/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { SectionRow } from "../../components/section-row";
 import { sdk } from "../../lib/sdk";
 import { ProductCustomAttribute } from "./types";
+import { toast } from "@medusajs/ui";
+import { ConfirmationDialog } from "../../components/delete-confirmation";
 
-// Extended interface for UI state
 interface ProductCustomAttributeWithUI extends ProductCustomAttribute {
   is_edit?: boolean;
   is_visible?: boolean;
+  // Allow optional type on nested category attribute for UI logic
+  category_custom_attribute: ProductCustomAttribute["category_custom_attribute"] & {
+    type?: string | null;
+  };
 }
 
 // Interface for sync result
@@ -31,6 +45,7 @@ interface SyncResult {
     category_custom_attribute: {
       key: string;
       label: string;
+      type?: string | null;
     };
     value: string;
     is_visible?: boolean;
@@ -64,14 +79,22 @@ const ProductCustomAttributesWidget = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
 
-  // Update local state when data changes
+  // Drawer state for editing
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [editingAttribute, setEditingAttribute] =
+    useState<ProductCustomAttributeWithUI | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    value: string;
+    is_visible: boolean;
+  }>({ value: "", is_visible: false });
+
   useEffect(() => {
     if (data?.product_custom_attributes) {
       setProductAttributes(
         data.product_custom_attributes.map((attr) => ({
           ...attr,
           is_edit: false,
-        }))
+        })) as ProductCustomAttributeWithUI[]
       );
     }
   }, [data?.product_custom_attributes]);
@@ -79,177 +102,171 @@ const ProductCustomAttributesWidget = ({
   const handleSync = async () => {
     setIsSyncing(true);
     try {
-      const result = await sdk.client.fetch(`/admin/product/sync?product_id=${product.id}`);
+      const result = await sdk.client.fetch(
+        `/admin/product/sync?product_id=${product.id}`
+      );
       setSyncResult(result as SyncResult);
-      
-      // Invalidate the query to refetch the data
+
       await queryClient.invalidateQueries({
         queryKey: [["product", product.id, "custom-attributes"]],
       });
-      
-      // If we have created attributes in the result, add them to the local state
-      if (result && (result as SyncResult).created && (result as SyncResult).created.length > 0) {
+
+      if (
+        result &&
+        (result as SyncResult).created &&
+        (result as SyncResult).created.length > 0
+      ) {
         const syncData = result as SyncResult;
-        
-        // Create properly typed product attributes from sync result
-        const newAttributes: ProductCustomAttributeWithUI[] = syncData.created.map(attr => {
-          return {
-            id: attr.id,
-            product_id: product.id,
-            category_custom_attribute_id: attr.category_custom_attribute_id,
-            value: attr.value,
-            is_visible: attr.is_visible,
-            category_custom_attribute: {
-              id: attr.category_custom_attribute_id,
-              key: attr.category_custom_attribute.key,
-              label: attr.category_custom_attribute.label,
-              category_id: "", // We don't have this in the sync result, but need it for the type
+
+        const newAttributes: ProductCustomAttributeWithUI[] =
+          syncData.created.map((attr) => {
+            return {
+              id: attr.id,
+              product_id: product.id,
+              category_custom_attribute_id: attr.category_custom_attribute_id,
+              value: attr.value,
+              is_visible: attr.is_visible,
+              category_custom_attribute: {
+                id: attr.category_custom_attribute_id,
+                key: attr.category_custom_attribute.key,
+                label: attr.category_custom_attribute.label,
+                type: attr.category_custom_attribute.type ?? null,
+                category_id: "", // unknown here
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                deleted_at: null,
+              },
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-              deleted_at: null
-            },
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            deleted_at: null,
-            is_edit: false
-          };
-        });
-        
-        setProductAttributes(prev => [...prev, ...newAttributes]);
+              deleted_at: null,
+              is_edit: false,
+            };
+          });
+
+        setProductAttributes((prev) => [...prev, ...newAttributes]);
       }
-      
+
+      toast.success("Custom attributes synced");
     } catch (error) {
       console.error("Error syncing categories:", error);
-      alert("Failed to sync categories");
+      toast.error("Failed to sync categories");
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const handleSave = async (id: string, value: string) => {
+  const handleSave = async (id: string, value: string, is_visible: boolean) => {
     try {
-      // Find the attribute to get its category_custom_attribute_id
-      const attribute = productAttributes.find(attr => attr.id === id);
-      
+      const attribute = productAttributes.find((attr) => attr.id === id);
+
       if (!attribute?.category_custom_attribute_id) {
         console.error("Cannot find category_custom_attribute_id");
+        toast.error("Failed to save: missing attribute reference");
         return;
       }
 
-      // For existing attributes, use PATCH with the attribute ID
-      if (id && !id.startsWith('temp_')) {
+      if (id && !id.startsWith("temp_")) {
         const payload = {
           product_custom_attributes: [
             {
               id: id,
               value: value,
-              is_visible: attribute.is_visible,
-            }
-          ]
+              is_visible: is_visible,
+            },
+          ],
         };
 
         const url = `/admin/product/${product.id}/custom-attributes`;
         const method = "PATCH";
-        // Try using a direct fetch call instead of the SDK
         try {
-          await sdk.client.fetch(
-            url,
-            {
-              method,
-              body: payload,
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        } catch (fetchError) {
-         console.error(fetchError, "fetchError");
-        }
-      } else {
-        const payload = {
-          category_custom_attribute_id: attribute.category_custom_attribute_id,
-          value: value,
-          is_visible: attribute.is_visible,
-        };
-
-        const url = `/admin/product/${product.id}/custom-attributes`;
-        const method = "POST";
-        
-        const response = await sdk.client.fetch(
-          url,
-          {
+          await sdk.client.fetch(url, {
             method,
             body: payload,
             headers: {
               "Content-Type": "application/json",
             },
-          }
-        ) as SaveAttributeResponse;
+          });
+          toast.success("Attribute updated successfully");
+        } catch (fetchError) {
+          console.error(fetchError, "fetchError");
+          toast.error("Failed to update attribute");
+          return;
+        }
+      } else {
+        const payload = {
+          category_custom_attribute_id: attribute.category_custom_attribute_id,
+          value: value,
+          is_visible: is_visible,
+        };
 
-        // If this was a new attribute, we need to update the ID with the one from the response
+        const url = `/admin/product/${product.id}/custom-attributes`;
+        const method = "POST";
+
+        const response = (await sdk.client.fetch(url, {
+          method,
+          body: payload,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })) as SaveAttributeResponse;
+
         if (response && response.productCustomAttribute?.id) {
           setProductAttributes((prev) =>
             prev.map((attr) =>
-              attr.id === id ? { ...attr, id: response.productCustomAttribute.id, value, is_edit: false } : attr
+              attr.id === id
+                ? {
+                    ...attr,
+                    id: response.productCustomAttribute.id,
+                    value,
+                    is_visible,
+                    is_edit: false,
+                  }
+                : attr
             )
           );
-          
-          // Exit early as we've already updated the state
+
           queryClient.invalidateQueries({
             queryKey: [["product", product.id, "custom-attributes"]],
           });
+          toast.success("Attribute created");
           return;
         }
       }
 
       setProductAttributes((prev) =>
         prev.map((attr) =>
-          attr.id === id ? { ...attr, value, is_edit: false } : attr
+          attr.id === id ? { ...attr, value, is_visible, is_edit: false } : attr
         )
       );
 
-      // Refresh the data after saving
       queryClient.invalidateQueries({
         queryKey: [["product", product.id, "custom-attributes"]],
       });
     } catch (error: any) {
       console.error("Failed to update attribute", error);
-      alert(`Error: ${error?.message || "Failed to save attribute"}`);
+      toast.error(error?.message || "Failed to save attribute");
     }
   };
 
   const handleDelete = async (id: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this custom attribute? This action cannot be undone."
-    );
-    
-    if (!confirmed) {
-      return;
-    }
-
     try {
       const url = `/admin/product/${product.id}/custom-attributes?id=${id}`;
-      await sdk.client.fetch(
-        url,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await sdk.client.fetch(url, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      // Update local state to remove the deleted attribute
-      setProductAttributes((prev) =>
-        prev.filter((attr) => attr.id !== id)
-      );
-      
-      // Refresh the data after deleting
+      setProductAttributes((prev) => prev.filter((attr) => attr.id !== id));
+
       queryClient.invalidateQueries({
         queryKey: [["product", product.id, "custom-attributes"]],
       });
+
+      toast.success("Attribute deleted");
     } catch (error: any) {
-      alert(`Error deleting attribute: ${error?.message || "Unknown error"}`);
+      toast.error(error?.message || "Error deleting attribute");
     }
   };
 
@@ -271,7 +288,6 @@ const ProductCustomAttributesWidget = ({
       const url = `/admin/product/${product.id}/custom-attributes`;
       const method = "PATCH";
 
-      // Only use sdk.client.fetch for API call
       await sdk.client.fetch(url, {
         method,
         body: payload,
@@ -281,18 +297,104 @@ const ProductCustomAttributesWidget = ({
       });
 
       setProductAttributes((prev) =>
-        prev.map((attr) =>
-          attr.id === id ? { ...attr, is_visible } : attr
-        )
+        prev.map((attr) => (attr.id === id ? { ...attr, is_visible } : attr))
       );
 
       queryClient.invalidateQueries({
         queryKey: [["product", product.id, "custom-attributes"]],
       });
+
+      toast.success("Visibility updated");
     } catch (error: any) {
       console.error("Failed to update visibility", error);
-      alert(`Error: ${error?.message || "Failed to update visibility"}`);
+      toast.error(error?.message || "Failed to update visibility");
     }
+  };
+
+  // Upload file for file-type attributes: returns final file URL
+  const uploadFileAndGetUrl = async (file: File): Promise<string> => {
+    // 1) get presigned POST
+    const presign = (await sdk.client.fetch(`/admin/s3-presigned-url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: {
+        name: file.name,
+        type: file.type,
+      },
+    })) as {
+      success: boolean;
+      url: string;
+      fields: Record<string, string>;
+      fileUrl: string;
+    };
+
+    if (!presign?.success) {
+      throw new Error("Failed to get upload URL");
+    }
+
+    // 2) upload to S3 with formData
+    const formData = new FormData();
+    Object.entries(presign.fields).forEach(([k, v]) => formData.append(k, v));
+    formData.append("Content-Type", file.type);
+    formData.append("file", file);
+
+    const s3Res = await fetch(presign.url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!s3Res.ok) {
+      throw new Error("Failed to upload file");
+    }
+
+    // 3) return accessible file URL
+    return presign.fileUrl;
+  };
+
+  const handleUploadForAttribute = async (
+    attr: ProductCustomAttributeWithUI,
+    file?: File | null
+  ) => {
+    if (!file) return;
+    try {
+      const fileUrl = await uploadFileAndGetUrl(file);
+
+      // apply value and save
+      const id = attr.id;
+      // Optimistic UI
+      setProductAttributes((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, value: fileUrl } : a))
+      );
+      await handleSave(id, fileUrl, attr.is_visible || false);
+      toast.success("File uploaded");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "File upload failed");
+    }
+  };
+
+  // Open edit drawer for an attribute
+  const openEditDrawer = (attribute: ProductCustomAttributeWithUI) => {
+    setEditingAttribute(attribute);
+    setEditFormData({
+      value: attribute.value || "",
+      is_visible: attribute.is_visible || false,
+    });
+    setEditDrawerOpen(true);
+  };
+
+  // Save changes from edit drawer
+  const handleEditSave = async () => {
+    if (!editingAttribute) return;
+
+    await handleSave(
+      editingAttribute.id,
+      editFormData.value,
+      editFormData.is_visible
+    );
+
+    setEditDrawerOpen(false);
+    setEditingAttribute(null);
   };
 
   return (
@@ -307,120 +409,217 @@ const ProductCustomAttributesWidget = ({
               onClick={handleSync}
               disabled={isSyncing}
             >
-              {isSyncing ? <Spinner className="animate-spin" /> : "Sync Custom Attributes"}
+              {isSyncing ? (
+                <Spinner className="animate-spin" />
+              ) : (
+                "Sync Custom Attributes"
+              )}
             </Button>
           </div>
         </div>
-        
+
         {syncResult && syncResult.created && syncResult.created.length > 0 && (
           <div className="px-6 py-2 bg-emerald-50">
             <Text size="small" className="text-emerald-700">
-              Successfully synced {syncResult.attributes_total} attributes from {syncResult.categories.length} categories.
+              Successfully synced {syncResult.attributes_total} attributes from{" "}
+              {syncResult.categories.length} categories.
             </Text>
           </div>
         )}
-        
+
         <div className="px-6 py-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Spinner className="animate-spin" />
             </div>
-          ) : productAttributes?.filter(attr => !attr.deleted_at).length ? (
-            <div className="grid grid-cols-4 gap-x-4 gap-y-8">
-              {/* Data Rows */}
-              {productAttributes.filter(attr => !attr.deleted_at).map((attr: ProductCustomAttributeWithUI) => (
-                <>
-                  {/* Attribute Label */}
-                  <div className="flex items-center text-left">
-                    {attr?.category_custom_attribute?.label || "Unknown"}
-                  </div>
-                  {/* Attribute Value */}
-                  <div className="flex flex-col justify-start text-left">
-                    {attr?.is_edit ? (
+          ) : productAttributes?.filter((attr) => !attr.deleted_at).length ? (
+            <div className="grid gap-y-6">
+              {productAttributes
+                .filter((attr) => !attr.deleted_at)
+                .map((attr: ProductCustomAttributeWithUI) => (
+                  <div
+                    key={attr.id}
+                    className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-x-4"
+                  >
+                    {/* Attribute Label */}
+                    <div className="flex items-center text-left">
+                      {attr?.category_custom_attribute?.label || "Unknown"}
+                    </div>
+                    {/* Attribute Value */}
+                    <div className="flex flex-col justify-start text-left">
                       <div className="flex items-center gap-2">
-                        <Textarea
-                          rows={3}
-                          value={attr?.value || ""}
-                          onChange={(e) => {
-                            setProductAttributes(
-                              productAttributes.map((pa) =>
-                                pa.id === attr.id
-                                  ? { ...attr, value: e.target.value }
-                                  : pa
-                              )
-                            );
-                          }}
-                          placeholder={`Enter value for ${attr?.category_custom_attribute?.label}`}
-                        />
-                        <Button
-                          variant="secondary"
-                          size="small"
-                          onClick={() => handleSave(attr.id, attr.value || "")}
-                        >
-                          Save
-                        </Button>
+                        {attr?.category_custom_attribute?.type === "file" ? (
+                          attr?.value ? (
+                            <a
+                              href={attr.value}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-ui-fg-interactive"
+                            >
+                              View file
+                            </a>
+                          ) : (
+                            <Text size="small" className="text-ui-fg-subtle">
+                              --
+                            </Text>
+                          )
+                        ) : (
+                          <>
+                            {attr?.value || (
+                              <Text size="small" className="text-ui-fg-subtle">
+                                --
+                              </Text>
+                            )}
+                          </>
+                        )}
                       </div>
-                    ) : (
-                      <div>
-                        {attr?.value || <Text size="small" className="text-ui-fg-subtle"> -- </Text>}
-                      </div>
-                    )}
-                  </div>
-                  {/* Visibility Switch */}
-                  <div className="flex items-center gap-2 justify-start text-left">
-                    <Switch
-                      checked={!!attr.is_visible}
-                      onCheckedChange={(checked) => handleToggleVisibility(attr.id, checked)}
-                      id={`is-visible-switch-${attr.id}`}
-                    />
-                    <label htmlFor={`is-visible-switch-${attr.id}`}>
-                      Visible
-                    </label>
-                  </div>
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 justify-start text-left">
-                    {!attr?.is_edit && (
-                      <button
-                        type="button"
-                        className="text-ui-fg-muted hover:text-ui-fg-base transition-colors"
-                        onClick={() => {
-                          setProductAttributes(
-                            productAttributes.map((pa) =>
-                              pa.id === attr.id
-                                ? { ...attr, is_edit: true }
-                                : pa
-                            )
-                          );
-                        }}
-                        title="Edit attribute value"
+                    </div>
+                    {/* Visibility Switch */}
+                    <div className="flex items-center gap-2 justify-start text-left">
+                      <Switch
+                        checked={!!attr.is_visible}
+                        disabled
+                        id={`is-visible-switch-${attr.id}`}
+                      />
+                      <label htmlFor={`is-visible-switch-${attr.id}`}>
+                        Visible
+                      </label>
+                    </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 justify-start text-left">
+                      <Button
+                        variant="secondary"
+                        size="small"
+                        onClick={() => openEditDrawer(attr)}
                       >
                         <Pencil />
-                      </button>
-                    )}
-                    {!attr?.is_edit && (
-                      <button
-                        type="button"
-                        className="text-ui-fg-muted hover:text-ui-fg-base transition-colors"
-                        onClick={() => handleDelete(attr.id)}
-                        title="Delete attribute"
+                        Edit
+                      </Button>
+                      <ConfirmationDialog
+                        variant="danger"
+                        title="Delete Attribute"
+                        description="Are you sure you want to delete this custom attribute? This action cannot be undone."
+                        onConfirm={() => handleDelete(attr.id)}
+                        confirmText="Delete"
+                        cancelText="Cancel"
                       >
-                        <Trash />
-                      </button>
-                    )}
+                        <Button variant="danger" size="small">
+                          <Trash />
+                          Delete
+                        </Button>
+                      </ConfirmationDialog>
+                    </div>
                   </div>
-                </>
-              ))}
+                ))}
             </div>
           ) : (
             <div className="text-center py-8">
-              <Text size="small" className="text-ui-fg-subtle mb-4">No custom attributes found.</Text>
+              <Text size="small" className="text-ui-fg-subtle mb-4">
+                No custom attributes found.
+              </Text>
               <Text size="small">
-                Click "Sync Custom Attributes" to fetch attributes from the product's categories.
+                Click "Sync Custom Attributes" to fetch attributes from the
+                product's categories.
               </Text>
             </div>
           )}
         </div>
       </Container>
+
+      {/* Edit Drawer */}
+      <Drawer open={editDrawerOpen} onOpenChange={setEditDrawerOpen}>
+        <Drawer.Content>
+          <Drawer.Header>Edit Custom Attribute</Drawer.Header>
+          <Drawer.Body className="flex flex-1 flex-col gap-y-6">
+            {editingAttribute && (
+              <>
+                <div>
+                  <Label size="small" weight="plus">
+                    {editingAttribute.category_custom_attribute?.label ||
+                      "Custom Attribute"}
+                  </Label>
+                  {editingAttribute.category_custom_attribute?.type ===
+                  "file" ? (
+                    <div className="mt-2">
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleUploadForAttribute(editingAttribute, file);
+                            setEditDrawerOpen(false);
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-ui-bg-interactive file:text-ui-fg-on-color hover:file:bg-ui-bg-interactive-hover"
+                      />
+                      {editingAttribute.value && (
+                        <div className="mt-2">
+                          <Text size="small" className="text-ui-fg-subtle">
+                            Current file:
+                          </Text>
+                          <a
+                            href={editingAttribute.value}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-ui-fg-interactive text-sm"
+                          >
+                            View current file
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Textarea
+                      rows={4}
+                      value={editFormData.value}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          value: e.target.value,
+                        })
+                      }
+                      placeholder={`Enter value for ${editingAttribute.category_custom_attribute?.label}`}
+                      className="mt-2"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={editFormData.is_visible}
+                      onCheckedChange={(checked) =>
+                        setEditFormData({
+                          ...editFormData,
+                          is_visible: checked,
+                        })
+                      }
+                      id="edit-visibility-switch"
+                    />
+                    <Label htmlFor="edit-visibility-switch">
+                      Make this attribute visible to customers
+                    </Label>
+                  </div>
+                </div>
+              </>
+            )}
+          </Drawer.Body>
+          <Drawer.Footer>
+            <div className="flex items-center justify-end gap-x-2">
+              <Drawer.Close asChild>
+                <Button size="small" variant="secondary">
+                  Cancel
+                </Button>
+              </Drawer.Close>
+              {editingAttribute?.category_custom_attribute?.type !== "file" && (
+                <Button size="small" onClick={handleEditSave}>
+                  Save Changes
+                </Button>
+              )}
+            </div>
+          </Drawer.Footer>
+        </Drawer.Content>
+      </Drawer>
     </>
   );
 };

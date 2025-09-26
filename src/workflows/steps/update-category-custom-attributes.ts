@@ -5,7 +5,10 @@ import ProductCustomAttributeModuleService from "../../modules/product-custom-at
 
 export const updateCategoryCustomAttributeStep = createStep(
   "update-category-custom-attribute",
-  async ({ id, label, deleted_at }: UpdateCategoryCustomAttributeInput, { container }) => {
+  async (
+    { id, label, type, deleted_at }: UpdateCategoryCustomAttributeInput,
+    { container }
+  ) => {
     const productCustomAttributeService: ProductCustomAttributeModuleService =
       container.resolve(PRODUCT_CUSTOM_ATTRIBUTES_MODULE);
 
@@ -13,6 +16,7 @@ export const updateCategoryCustomAttributeStep = createStep(
       await productCustomAttributeService.updateCategoryCustomAttributes({
         id,
         ...(label && { label }),
+        ...(type && { type }),
         ...(deleted_at && { deleted_at }),
       });
 

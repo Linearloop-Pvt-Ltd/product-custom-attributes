@@ -1,4 +1,5 @@
 export type CreateCategoryCustomAttributeInput = {
+  type: string;
   label: string;
   category_id: string;
 };
@@ -24,5 +25,6 @@ export type UpdateProductCustomAttributeInput = {
 export type UpdateCategoryCustomAttributeInput = {
   id: string;
   label?: string;
+  type?: string;
   deleted_at?: string;
 };
