@@ -6,7 +6,7 @@ import { PRODUCT_CUSTOM_ATTRIBUTES_MODULE } from "../../modules/product-custom-a
 export const createCategoryCustomAttributeStep = createStep(
   "create-category-custom-attribute",
   async (
-    { label, category_id }: CreateCategoryCustomAttributeInput,
+    { type, label, category_id }: CreateCategoryCustomAttributeInput,
     { container }
   ) => {
     const productCustomAttributeService: ProductCustomAttributeModuleService =
@@ -17,6 +17,7 @@ export const createCategoryCustomAttributeStep = createStep(
     const categoryCustomAttribute =
       await productCustomAttributeService.createCategoryCustomAttributes({
         label,
+        type,
         key: caKey,
         category_id,
       });

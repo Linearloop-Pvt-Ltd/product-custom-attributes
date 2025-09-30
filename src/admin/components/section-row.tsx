@@ -1,20 +1,20 @@
-import { Text, clx } from "@medusajs/ui"
+import { Text, clx } from "@medusajs/ui";
 
 export type SectionRowProps = {
-  title: string
-  value?: React.ReactNode | string | null
-  actions?: React.ReactNode
-}
+  title: string;
+  value?: React.ReactNode | string | null;
+  actions?: React.ReactNode;
+};
 
 export const SectionRow = ({ title, value, actions }: SectionRowProps) => {
-  const isValueString = typeof value === "string" || !value
+  const isValueString = typeof value === "string" || !value;
 
   return (
     <div
       className={clx(
         `text-ui-fg-subtle grid grid-cols-2 items-center px-6 py-4`,
         {
-          "grid-cols-[1fr_1fr_28px]": !!actions,
+          "grid-cols-[2fr_4fr_1fr]": !!actions,
         }
       )}
     >
@@ -36,5 +36,5 @@ export const SectionRow = ({ title, value, actions }: SectionRowProps) => {
 
       {actions && <div>{actions}</div>}
     </div>
-  )
-}
+  );
+};
