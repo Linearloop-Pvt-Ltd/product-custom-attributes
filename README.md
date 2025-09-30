@@ -26,6 +26,7 @@ npm install @aws-sdk/s3-presigned-post
 ```
 npm install --save react-dropzone
 
+```
 
 ## Installation
 
@@ -41,7 +42,7 @@ npm i @linearcommerce/product-custom-attributes
 
 **To use this plugin, you need to have the minimum versions of the following dependencies:**
 
-```json
+```ts
 "@medusajs/admin-sdk": "^2.8.2",
 "@medusajs/cli": "^2.8.2",
 "@medusajs/framework": "^2.8.2",
