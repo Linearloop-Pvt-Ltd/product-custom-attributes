@@ -18,6 +18,7 @@ import { sdk } from "../../lib/sdk";
 import { ProductCustomAttribute } from "./types";
 import { toast } from "@medusajs/ui";
 import { ConfirmationDialog } from "../../components/delete-confirmation";
+import { FileUpload } from "../../components/file-uploader";
 
 interface ProductCustomAttributeWithUI extends ProductCustomAttribute {
   is_edit?: boolean;
@@ -439,54 +440,62 @@ const ProductCustomAttributesWidget = ({
                 .map((attr: ProductCustomAttributeWithUI) => (
                   <div
                     key={attr.id}
-                    className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-x-4"
+                    className="grid grid-cols-[1.5fr_2.5fr_auto_auto] gap-x-6 items-start"
                   >
                     {/* Attribute Label */}
-                    <div className="flex items-center text-left">
-                      {attr?.category_custom_attribute?.label || "Unknown"}
+                    <div className="flex items-start text-left pt-1">
+                      <span className="font-medium">
+                        {attr?.category_custom_attribute?.label || "Unknown"}
+                      </span>
                     </div>
+
                     {/* Attribute Value */}
-                    <div className="flex flex-col justify-start text-left">
-                      <div className="flex items-center gap-2">
-                        {attr?.category_custom_attribute?.type === "file" ? (
-                          attr?.value ? (
-                            <a
-                              href={attr.value}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-ui-fg-interactive"
-                            >
-                              View file
-                            </a>
-                          ) : (
+                    <div className="flex items-start">
+                      {attr?.category_custom_attribute?.type === "file" ? (
+                        attr?.value ? (
+                          <div
+                            onClick={() => window.open(attr.value, "_blank")}
+                            className="cursor-pointer w-[450px]"
+                          >
+                            <img
+                              src={attr.value}
+                              alt="Preview"
+                              className="w-24 h-24 object-cover rounded"
+                            />
+                          </div>
+                        ) : (
+                          <Text size="small" className="text-ui-fg-subtle pt-1">
+                            --
+                          </Text>
+                        )
+                      ) : (
+                        <span className="break-words max-w-full w-[450px] leading-relaxed">
+                          {attr?.value || (
                             <Text size="small" className="text-ui-fg-subtle">
                               --
                             </Text>
-                          )
-                        ) : (
-                          <>
-                            {attr?.value || (
-                              <Text size="small" className="text-ui-fg-subtle">
-                                --
-                              </Text>
-                            )}
-                          </>
-                        )}
-                      </div>
+                          )}
+                        </span>
+                      )}
                     </div>
+
                     {/* Visibility Switch */}
-                    <div className="flex items-center gap-2 justify-start text-left">
+                    <div className="flex items-start gap-2 justify-start text-left pt-1 min-w-[120px]">
                       <Switch
                         checked={!!attr.is_visible}
                         disabled
                         id={`is-visible-switch-${attr.id}`}
                       />
-                      <label htmlFor={`is-visible-switch-${attr.id}`}>
+                      <label
+                        htmlFor={`is-visible-switch-${attr.id}`}
+                        className="whitespace-nowrap"
+                      >
                         Visible
                       </label>
                     </div>
+
                     {/* Actions */}
-                    <div className="flex items-center gap-2 justify-start text-left">
+                    <div className="flex items-start gap-2 justify-start text-left min-w-[180px]">
                       <Button
                         variant="secondary"
                         size="small"
@@ -541,32 +550,19 @@ const ProductCustomAttributesWidget = ({
                   {editingAttribute.category_custom_attribute?.type ===
                   "file" ? (
                     <div className="mt-2">
-                      <input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            handleUploadForAttribute(editingAttribute, file);
-                            setEditDrawerOpen(false);
+                      <FileUpload
+                        initialUrl={editingAttribute.value}
+                        onUploaded={async (url) => {
+                          if (editingAttribute) {
+                            await handleSave(
+                              editingAttribute.id,
+                              url,
+                              editingAttribute.is_visible || false
+                            );
+                            setEditDrawerOpen(false); // Close drawer after upload and save
                           }
                         }}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-ui-bg-interactive file:text-ui-fg-on-color hover:file:bg-ui-bg-interactive-hover"
                       />
-                      {editingAttribute.value && (
-                        <div className="mt-2">
-                          <Text size="small" className="text-ui-fg-subtle">
-                            Current file:
-                          </Text>
-                          <a
-                            href={editingAttribute.value}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-ui-fg-interactive text-sm"
-                          >
-                            View current file
-                          </a>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <Textarea

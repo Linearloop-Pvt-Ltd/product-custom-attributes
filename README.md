@@ -7,9 +7,24 @@
 
 ## Previews
 <div style="display:flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory;">
-  <img src="./public/category-attributes.png" width="300" style="scroll-snap-align: start;" />
-  <img src="./public/product-attributes.png" width="300" style="scroll-snap-align: start;" />
+  <img src="https://linearcommerce.s3.us-east-1.amazonaws.com/assest/custom_attribute.png" width="300" style="scroll-snap-align: start;" />
+  <img src="https://linearcommerce.s3.us-east-1.amazonaws.com/assest/two_brand.png" width="300" style="scroll-snap-align: start;" />
 </div>
+
+## Dependencies
+**To use this plugin, you must have installed the following npm packages dependencies**
+
+**Install aws-sdk/client-s3 and aws-sdk/s3-presigned-post** 
+
+```
+npm install @aws-sdk/client-s3
+npm install @aws-sdk/s3-presigned-post
+
+```
+**Install react-dropzone** 
+
+```
+npm install --save react-dropzone
 
 
 ## Installation
@@ -36,6 +51,18 @@ npm i @linearcommerce/product-custom-attributes
 ```
 
 ## Usage
+
+#### Add below environment variables in your .env file If you are using AWS S3 for file uploads:
+
+```ts
+AWS_S3_ACCESS_KEY_ID=Your AWS Access Key ID
+AWS_S3_ACCESS_SECRET=Your AWS Access Secret Key
+AWS_S3_REGION=Your AWS Region
+AWS_S3_BUCKET=Your AWS Bucket Name
+AWS_S3_ENDPOINT=https://s3.amazonaws.com
+```
+
+
 
 #### Add the plugin to your `medusa-config.ts` file:
 
