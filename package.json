@@ -1,6 +1,6 @@
 {
   "name": "@linearcommerce/product-custom-attributes",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Product custom attributes plugin for MedusaJS.",
   "author": "LinearCommerce (https://www.linearcommerce.io/)",
   "license": "MIT",
